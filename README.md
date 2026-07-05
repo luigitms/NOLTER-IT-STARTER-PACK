@@ -443,6 +443,10 @@ screenshots/
 
 ![Uptime Kuma GLPI NetBox monitors](screenshots/08-uptime-kuma-glpi-netbox-monitors.png)
 
+### GitHub Actions
+
+![GitHub Actions CI success](screenshots/09-github-actions-ci-success.png)
+
 ---
 
 ## Structure du repository
