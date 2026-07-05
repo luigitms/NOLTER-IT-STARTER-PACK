@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: "Nolter IT Starter Pack"
+    orgId: 1
+    folder: "Nolter IT Starter Pack"
+    folderUid: "nolter-it-starter-pack"
+    type: file
+    disableDeletion: false
+    allowUiUpdates: true
+    updateIntervalSeconds: 10
+    options:
+      path: /var/lib/grafana/dashboards
