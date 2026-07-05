@@ -24,14 +24,27 @@ jobs:
         run: |
           test -f README.md
           test -f docker-compose.yml
+          test -f docker-compose.monitoring.yml
           test -f .env.example
           test -d docs
           test -d scripts
           test -d config
           test -d screenshots
+          test -d monitoring
+
+      - name: Check monitoring files
+        run: |
+          test -f docker-compose.monitoring.yml
+          test -f monitoring/prometheus/prometheus.yml
+          test -f monitoring/grafana/provisioning/datasources/prometheus.yml
+          test -f monitoring/grafana/provisioning/dashboards/dashboards.yml
+          test -f monitoring/grafana/dashboards/docker-containers-overview.json
 
       - name: Prepare environment file
         run: cp .env.example .env
 
       - name: Validate Docker Compose file
         run: docker compose -f docker-compose.yml config
+
+      - name: Validate monitoring Docker Compose file
+        run: docker compose -f docker-compose.monitoring.yml config
