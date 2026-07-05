@@ -1,0 +1,112 @@
+services:
+  glpi-db:
+    image: mysql:8.4
+    container_name: nolter-glpi-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - glpi-db-data:/var/lib/mysql
+    networks:
+      - nolter-it-network
+
+  glpi:
+    image: glpi/glpi:latest
+    container_name: nolter-glpi
+    restart: unless-stopped
+    depends_on:
+      - glpi-db
+    env_file:
+      - .env
+    ports:
+      - "${GLPI_PORT:-8080}:80"
+    volumes:
+      - glpi-data:/var/glpi
+    networks:
+      - nolter-it-network
+
+  netbox-db:
+    image: postgres:16-alpine
+    container_name: nolter-netbox-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${NETBOX_DB_NAME}
+      POSTGRES_USER: ${NETBOX_DB_USER}
+      POSTGRES_PASSWORD: ${NETBOX_DB_PASSWORD}
+    volumes:
+      - netbox-db-data:/var/lib/postgresql/data
+    networks:
+      - nolter-it-network
+
+  netbox-redis:
+    image: redis:7-alpine
+    container_name: nolter-netbox-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${NETBOX_REDIS_PASSWORD}
+    volumes:
+      - netbox-redis-data:/data
+    networks:
+      - nolter-it-network
+
+  netbox:
+    image: lscr.io/linuxserver/netbox:latest
+    container_name: nolter-netbox
+    restart: unless-stopped
+    depends_on:
+      - netbox-db
+      - netbox-redis
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+      - SUPERUSER_EMAIL=${NETBOX_SUPERUSER_EMAIL}
+      - SUPERUSER_PASSWORD=${NETBOX_SUPERUSER_PASSWORD}
+      - ALLOWED_HOST=${NETBOX_ALLOWED_HOST}
+      - CSRF_TRUSTED_ORIGINS=${NETBOX_CSRF_TRUSTED_ORIGINS}
+      - DB_NAME=${NETBOX_DB_NAME}
+      - DB_USER=${NETBOX_DB_USER}
+      - DB_PASSWORD=${NETBOX_DB_PASSWORD}
+      - DB_HOST=netbox-db
+      - DB_PORT=5432
+      - REDIS_HOST=netbox-redis
+      - REDIS_PORT=6379
+      - REDIS_USERNAME=
+      - REDIS_PASSWORD=${NETBOX_REDIS_PASSWORD}
+      - REDIS_DB_TASK=0
+      - REDIS_DB_CACHE=1
+    ports:
+      - "${NETBOX_PORT:-8000}:8000"
+    volumes:
+      - netbox-config:/config
+    networks:
+      - nolter-it-network
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: nolter-uptime-kuma
+    restart: unless-stopped
+    environment:
+      - UPTIME_KUMA_DB_TYPE=${UPTIME_KUMA_DB_TYPE:-sqlite}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${UPTIME_KUMA_PORT:-3001}:3001"
+    volumes:
+      - uptime-kuma-data:/app/data
+    networks:
+      - nolter-it-network
+
+networks:
+  nolter-it-network:
+    name: nolter-it-network
+
+volumes:
+  glpi-db-data:
+  glpi-data:
+  netbox-db-data:
+  netbox-redis-data:
+  netbox-config:
+  uptime-kuma-data:
